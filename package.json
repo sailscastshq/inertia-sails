@@ -1,0 +1,23 @@
+{
+  "name": "inertia-sails",
+  "version": "0.0.0",
+  "description": "The Sails adapter for Inertia.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sailscasts/inertia-sails.git"
+  },
+  "keywords": [
+    "Inertia",
+    "Sails"
+  ],
+  "author": "Kelvin Omereshone Oghenerhoro <kelvin@sailscasts.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sailscasts/inertia-sails/issues"
+  },
+  "homepage": "https://github.com/sailscasts/inertia-sails#readme"
+}
