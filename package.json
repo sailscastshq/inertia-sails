@@ -3,12 +3,19 @@
   "version": "0.0.0",
   "description": "The Sails adapter for Inertia.",
   "main": "index.js",
+  "sails": {
+    "isHook": true,
+    "hookName": "inertia"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sailscasts/inertia-sails.git"
+  },
+  "peerDependencies": {
+    "sails": ">=1"
   },
   "keywords": [
     "Inertia",
