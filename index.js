@@ -9,7 +9,7 @@
 	return {
 		defaults: {
 			inertia: {
-				version: 1,
+        rootView: 'app'
 			}
 		},
 		/**
@@ -24,43 +24,19 @@
 		},
 		routes: {
       before: {
-        'GET /*': function(req, res, next) {
+        'GET *': function(req, res, next) {
             if (!req.get('X-Inertia')) return next()
-            let _headers = {};
-            let _viewData = {};
             let _statusCode = 200;
-            let _sharedProps = {};
 
             const inertia = {
-
-                setHeaders: function(headers) {
-                    _headers = { ..._headers, ...headers }
-                    return this
-                },
-
-                setViewData: function(viewData) {
-                    _viewData = { ..._viewData, viewData };
-                    return this;
-                },
-
-                setStatusCode: function(statusCode) {
-                    _statusCode = statusCode;
-                    return this;
-                },
-
-                shareProps: function(sharedProps) {
-                    _sharedProps = { ..._sharedProps, ...sharedProps };
-                    return this;
-                },
-
-                render: async function(component, props = {}) {
+                async render(component, props = {}) {
                   const page = {
                     version: sails.config.inertia.version,
                     component,
                     props,
                     url: req.originalUrl || req.url
                   }
-                  const allProps = { ..._sharedProps, ...props };
+                  const allProps = { ...props };
                   let dataKeys;
 
                   if (req.get('X-Inertia-Partial-Data') && req.get('X-Inertia-Partial-Component') === component) {
@@ -75,26 +51,15 @@
                       page.props[key] = allProps[key]
                     }
                   }
-
                   if (req.get('X-Inertia')) {
-                    res.writeHead(_statusCode, {
-                      ..._headers,
+                    res.set({
                       'Content-Type': 'application/json',
-                      'X-Inertia': 'true',
+                      'X-Inertia': true,
                       Vary: 'Accept'
-                  }).end(JSON.stringify(page))
-                  } else {
-                    const encodedPageString = JSON.stringify(page)
-                    .replace(/"/g, "&quot;")
-                    .replace(/'/g, "&#039;");
-
-                    res
-                    .writeHead(_statusCode, {
-                    ..._headers,
-                    "Content-Type": "text/html",
                     })
-                    .end(html(encodedPageString, _viewData));
-                }
+                    res.status = _statusCode
+                    res.end(JSON.stringify(page))
+                  }
               }
             }
             sails.inertia = inertia
