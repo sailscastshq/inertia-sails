@@ -99,5 +99,5 @@ const getPartialData = require('./private/get-partial-data')
           }
 				}
 		},
-	};
-};
+	}
+}
