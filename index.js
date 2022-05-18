@@ -15,33 +15,29 @@ const {
 const getPartialData = require('./private/get-partial-data')
 
 module.exports = function defineInertiaHook(sails) {
-  var hook
-  const sharedProps = {}
-  const sharedViewData = {}
-  let version = 1
+  let hook
+  let sharedProps = {}
+  let sharedViewData = {}
   let rootView = 'app'
+  let version
   return {
-    share(key, value = null) {
-      sharedProps[key] = value
-    },
-    getShared(key = null) {
-      return sharedProps[key] ?? sharedProps
-    },
-    viewData(key, value) {
-      sharedViewData[key] = value
-    },
-    getViewData(key) {
-      return sharedViewData[key] ?? sharedViewData
-    },
-    version(newVersion) {
-      version = newVersion
-    },
-    setRootView(newRootView) {
-      rootView = newRootView
-    },
-    getRootView() {
-      return rootView
-    },
+    share: (key, value = null) => (sharedProps[key] = value),
+
+    getShared: (key = null) => sharedProps[key] ?? sharedProps,
+
+    flushShared: () => (sharedProps = {}),
+
+    viewData: (key, value) => (sharedViewData[key] = value),
+
+    getViewData: (key) => sharedViewData[key] ?? sharedViewData,
+
+    setRootView: (newRootView) => (rootView = newRootView),
+
+    getRootView: () => rootView,
+
+    version: (newVersion) => (version = newVersion),
+
+    getVersion: () => version,
 
     initialize: async function (cb) {
       hook = this
@@ -105,6 +101,13 @@ module.exports = function defineInertiaHook(sails) {
                 page,
                 viewData: allViewData,
               })
+            }
+            hook.location = function (url = req.headers['referer']) {
+              const statusCode = ['PUT', 'PATCH', 'DELETE'].includes(req.method)
+                ? 303
+                : 409
+              res.status(statusCode)
+              res.set('X-Inertia-Location', url)
             }
 
             // Set Inertia headers
