@@ -7,87 +7,107 @@
 
 const { encode } = require('querystring')
 const isInertiaRequest = require('./private/is-inertia-request')
-const { INERTIA, PARTIAL_DATA, PARTIAL_COMPONENT } = require('./private/inertia-headers')
+const {
+  INERTIA,
+  PARTIAL_DATA,
+  PARTIAL_COMPONENT,
+} = require('./private/inertia-headers')
 const getPartialData = require('./private/get-partial-data')
 
- module.exports = function defineInertiaHook(sails) {
-   var hook
-   const sharedProps = {}
-   const sharedViewData = {}
-   let version = 1
-   let rootView = 'app'
-	return {
-    share(key, value = null) {
-      sharedProps[key] = value
-    },
-    getShared(key = null) {
-        return sharedProps[key] ?? sharedProps
-    },
-    viewData(key, value) {
-      sharedViewData[key] = value
-    },
-    getViewData(key) {
-      return sharedViewData[key] ?? sharedViewData
-    },
-    version(newVersion) {
-      version = newVersion
-    },
-    setRootView(newRootView) {
-      rootView = newRootView
-    },
-    getRootView() {
-      return rootView
-    },
+module.exports = function defineInertiaHook(sails) {
+  let hook
+  let sharedProps = {}
+  let sharedViewData = {}
+  let rootView = 'app'
+  let version
+  return {
+    share: (key, value = null) => (sharedProps[key] = value),
 
-		initialize: async function(cb) {
+    getShared: (key = null) => sharedProps[key] ?? sharedProps,
+
+    flushShared: () => (sharedProps = {}),
+
+    viewData: (key, value) => (sharedViewData[key] = value),
+
+    getViewData: (key) => sharedViewData[key] ?? sharedViewData,
+
+    setRootView: (newRootView) => (rootView = newRootView),
+
+    getRootView: () => rootView,
+
+    version: (newVersion) => (version = newVersion),
+
+    getVersion: () => version,
+
+    initialize: async function (cb) {
       hook = this
-			return cb()
-		},
+      return cb()
+    },
 
-		routes: {
+    routes: {
       before: {
-        'GET /*': function(req, res, next) {
-              hook.render = async function(component, props = {}, viewData = {}) {
+        'GET /*': {
+          skipAssets: true,
+          fn: function (req, res, next) {
+            hook.render = async function (
+              component,
+              props = {},
+              viewData = {}
+            ) {
+              const allProps = {
+                ...sharedProps,
+                ...props,
+              }
 
-                const allProps = {
-                  ...sharedProps,
-                  ...props
-                }
+              const allViewData = {
+                ...sharedViewData,
+                ...viewData,
+              }
 
-                const allViewData = {
-                  ...sharedViewData,
-                  ...viewData
-                }
+              const url = req.url || req.originalUrl
+              const currentVersion = version
 
-                const url = req.url || req.originalUrl
-                const currentVersion = version
+              const page = {
+                component,
+                version: currentVersion,
+                props: allProps,
+                url,
+              }
 
-                const page = {
-                  component,
-                  version: currentVersion,
-                  props: allProps,
-                  url,
-                }
+              // Implements inertia partial reload. See https://inertiajs.com/partial-reload
+              if (
+                req.get(PARTIAL_DATA) &&
+                req.get(PARTIAL_COMPONENT) === component
+              ) {
+                const only = req.get(PARTIAL_DATA).split(',')
+                page.props = only.length
+                  ? getPartialData(props, only)
+                  : page.props
+              }
 
-                // Implements inertia partial reload. See https://inertiajs.com/partial-reload
-                if (req.get(PARTIAL_DATA) && req.get(PARTIAL_COMPONENT) === component) {
-                  const only = req.get(PARTIAL_DATA).split(",")
-                  page.props = only.length ? getPartialData(props, only) : page.props
-                }
+              const queryParams = req.query
+              if (req.method == 'GET' && Object.keys(queryParams).length) {
+                // Keep original request query params
+                url += `?${encode(queryParams)}`
+              }
 
-                const queryParams = req.query;
-                if (req.method == 'GET' && Object.keys(queryParams).length) {
-                  // Keep original request query params
-                  url += `?${encode(queryParams)}`;
-                }
+              // Implements inertia requests
+              if (isInertiaRequest(req)) {
+                return res.status(200).json(page)
+              }
 
-                // Implements inertia requests
-                if (isInertiaRequest(req)) {
-                  return res.status(200).json(page)
-                }
-
-                // Implements full page reload
-                return  sails.hooks.views.render(rootView, { page, viewData: allViewData });
+              // Implements full page reload
+              return sails.hooks.views.render(rootView, {
+                page,
+                viewData: allViewData,
+              })
+            }
+            hook.location = function (url = req.headers['referer']) {
+              const statusCode = ['PUT', 'PATCH', 'DELETE'].includes(req.method)
+                ? 303
+                : 409
+              res.status(statusCode)
+              res.set('X-Inertia-Location', url)
             }
 
             // Set Inertia headers
@@ -96,8 +116,9 @@ const getPartialData = require('./private/get-partial-data')
               res.set('Vary', 'Accept')
             }
             return next()
-          }
-				}
-		},
-	}
+          },
+        },
+      },
+    },
+  }
 }
