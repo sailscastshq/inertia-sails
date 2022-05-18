@@ -26,5 +26,8 @@
   "bugs": {
     "url": "https://github.com/sailscasts/inertia-sails/issues"
   },
-  "homepage": "https://github.com/sailscasts/inertia-sails#readme"
+  "homepage": "https://github.com/sailscasts/inertia-sails#readme",
+  "devDependencies": {
+    "prettier": "^2.6.2"
+  }
 }
