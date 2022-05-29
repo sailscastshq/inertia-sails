@@ -12,9 +12,9 @@ const {
   PARTIAL_DATA,
   PARTIAL_COMPONENT,
 } = require('./private/inertia-headers')
-const getPartialData = require('./private/get-partial-data')
+const getPageProps = require('./private/get-page-props')
 
-module.exports = function defineInertiaHook(sails) {
+module.exports = async function defineInertiaHook(sails) {
   let hook
   let sharedProps = {}
   let sharedViewData = {}
@@ -70,20 +70,22 @@ module.exports = function defineInertiaHook(sails) {
               const page = {
                 component,
                 version: currentVersion,
-                props: allProps,
+                props: {},
                 url,
               }
 
               // Implements inertia partial reload. See https://inertiajs.com/partial-reload
+              let dataKeys
               if (
                 req.get(PARTIAL_DATA) &&
                 req.get(PARTIAL_COMPONENT) === component
               ) {
-                const only = req.get(PARTIAL_DATA).split(',')
-                page.props = only.length
-                  ? getPartialData(props, only)
-                  : page.props
+                dataKeys = req.get(PARTIAL_DATA).split(',')
+              } else {
+                dataKeys = Object.keys(allProps)
               }
+
+              page.props = await getPageProps(allProps, dataKeys)
 
               const queryParams = req.query
               if (req.method == 'GET' && Object.keys(queryParams).length) {
