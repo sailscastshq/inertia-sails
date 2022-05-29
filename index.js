@@ -14,7 +14,7 @@ const {
 } = require('./private/inertia-headers')
 const getPageProps = require('./private/get-page-props')
 
-module.exports = async function defineInertiaHook(sails) {
+module.exports = function defineInertiaHook(sails) {
   let hook
   let sharedProps = {}
   let sharedViewData = {}
@@ -85,7 +85,7 @@ module.exports = async function defineInertiaHook(sails) {
                 dataKeys = Object.keys(allProps)
               }
 
-              page.props = await getPageProps(allProps, dataKeys)
+              page.props = getPageProps(allProps, dataKeys)
 
               const queryParams = req.query
               if (req.method == 'GET' && Object.keys(queryParams).length) {
