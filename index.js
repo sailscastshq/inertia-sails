@@ -64,7 +64,7 @@ module.exports = function defineInertiaHook(sails) {
                 ...viewData,
               }
 
-              const url = req.url || req.originalUrl
+              let url = req.url || req.originalUrl
               const currentVersion = version
 
               const page = {
