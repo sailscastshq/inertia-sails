@@ -49,11 +49,7 @@ module.exports = function defineInertiaHook(sails) {
         'GET /*': {
           skipAssets: true,
           fn: function (req, res, next) {
-            hook.render = async function (
-              component,
-              props = {},
-              viewData = {}
-            ) {
+            hook.render = function (component, props = {}, viewData = {}) {
               const allProps = {
                 ...sharedProps,
                 ...props,
