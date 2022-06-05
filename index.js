@@ -19,13 +19,33 @@ module.exports = function defineInertiaHook(sails) {
   let sharedProps = {}
   let sharedViewData = {}
   let rootView = 'app'
-  let version
   return {
+    defaults: {
+      inertia: {
+        version: 1,
+      },
+    },
+    initialize: async function (cb) {
+      hook = this
+      sails.inertia = hook
+
+      hook.share('flash', {
+        success: null,
+        error: null,
+      })
+
+      hook.share('errors', {})
+
+      return cb()
+    },
+
     share: (key, value = null) => (sharedProps[key] = value),
 
     getShared: (key = null) => sharedProps[key] ?? sharedProps,
 
-    flushShared: () => (sharedProps = {}),
+    flushShared: (key) => {
+      key ? delete sharedProps[key] : (sharedProps = {})
+    },
 
     viewData: (key, value) => (sharedViewData[key] = value),
 
@@ -34,15 +54,6 @@ module.exports = function defineInertiaHook(sails) {
     setRootView: (newRootView) => (rootView = newRootView),
 
     getRootView: () => rootView,
-
-    version: (newVersion) => (version = newVersion),
-
-    getVersion: () => version,
-
-    initialize: async function (cb) {
-      hook = this
-      return cb()
-    },
 
     routes: {
       before: {
@@ -61,7 +72,11 @@ module.exports = function defineInertiaHook(sails) {
               }
 
               let url = req.url || req.originalUrl
-              const currentVersion = version
+              const assetVersion = sails.config.inertia.version
+              const currentVersion =
+                typeof assetVersion == 'function'
+                  ? assetVersion()
+                  : assetVersion
 
               const page = {
                 component,
