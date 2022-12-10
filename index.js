@@ -71,8 +71,8 @@ module.exports = function defineInertiaHook(sails) {
       const statusCode = ['PUT', 'PATCH', 'DELETE'].includes(req.method)
         ? 303
         : 409
-      res.status(statusCode)
       res.set('X-Inertia-Location', url)
+      return res.redirect(statusCode, url)
     }
 
     // Set Inertia headers
