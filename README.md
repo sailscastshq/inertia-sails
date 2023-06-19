@@ -1,4 +1,6 @@
-# Inertia.js Sails Adapter
+# Inertia.js Sails Adapter is now in the boring-stack repo
+
+> The create-sails CLI has been moved to [the boring-stack repo](https://github.com/sailscastshq/boring-stack/tree/main/inertia-sails)
 
 ## Installation
 
